@@ -1,8 +1,0 @@
-# Base image from rocker
-FROM rocker/rstudio
-
-# Restore man pages and install man-db
-RUN yes | unminimize && \
-    apt-get update && \
-    apt-get install -y man-db && \
-    rm -rf /var/lib/apt/lists/*
