@@ -1,0 +1,24 @@
+---
+title: "BIOS 611 Project Report"
+author: "Yun Jin Park"
+output: pdf_document
+---
+
+# Introduction
+
+
+
+# Methods
+
+
+
+# Results
+
+
+
+# Discussion
+
+
+
+# Conclusion
+
