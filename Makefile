@@ -1,7 +1,7 @@
 # Variables
 IMAGE_NAME = report-builder
 CONTAINER_NAME = report-container
-REPORT = BIOS_611_Project_Report.pdf
+REPORT = report.pdf
 
 # Build the Docker image
 build:
@@ -9,7 +9,7 @@ build:
 
 # Render the report in the container
 render:
-	docker run --rm -v $(shell pwd):/project $(IMAGE_NAME)
+	docker run --rm -v $(shell pwd):/project $(IMAGE_NAME) Rscript -e "rmarkdown::render('/project/report.Rmd')"
 
 # Clean up generated files
 clean:
