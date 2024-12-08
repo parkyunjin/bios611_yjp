@@ -1,20 +1,20 @@
 # Variables
-REPORT = report.Rmd
-OUTPUT = report.pdf
-DATA_DIR = data
-FIGURES_DIR = figures
+IMAGE_NAME = report-builder
+CONTAINER_NAME = report-container
+REPORT = BIOS_611_Project_Report.pdf
 
-.PHONY: report clean
+# Build the Docker image
+build:
+	docker build -t $(IMAGE_NAME) .
 
-# Default target
-report: $(OUTPUT)
+# Render the report in the container
+render:
+	docker run --rm -v $(shell pwd):/project $(IMAGE_NAME)
 
-# Build the report
-$(OUTPUT): $(REPORT)
-	Rscript -e "rmarkdown::render('$(REPORT)')"
-
-# Clean up generated and intermediate files
+# Clean up generated files
 clean:
-	rm -f $(OUTPUT)
-	rm -rf $(DATA_DIR)/*
-	rm -rf $(FIGURES_DIR)/*
+	rm -f $(REPORT)
+	rm -rf *_cache *_files
+
+# Build and render in one step
+all: build render
