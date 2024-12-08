@@ -17,7 +17,7 @@ This repository contains the files needed to render an R Markdown report (`repor
 
 1. **Clone the Repository**
 ```bash
-git clone https://github.com/yourusername/BIOS611-Project.git
+git clone https://github.com/parkyunjin/bios611_yjp.git
 cd BIOS611-Project
 ```
 
