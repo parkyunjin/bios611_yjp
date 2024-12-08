@@ -1,6 +1,7 @@
 # Use a base image with R installed
-#FROM rocker/verse:4.3.1
-FROM amoselb/rstudio-m1
+FROM rocker/verse 
+#:4.3.1
+#FROM amoselb/rstudio-m1
 
 # Set the working directory in the container
 WORKDIR /project611yjp
