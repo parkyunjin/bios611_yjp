@@ -1,5 +1,5 @@
 # Use a base image with R installed
-FROM rocker/verse 
+FROM rocker/rstudio
 #:4.3.1
 #FROM amoselb/rstudio-m1
 
