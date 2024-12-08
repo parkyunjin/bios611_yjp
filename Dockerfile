@@ -1,14 +1,14 @@
-# Base image from rocker
-FROM rocker/rstudio
+# Use a base image with R installed
+FROM rocker/verse:4.3.1
 
-# Install required R packages
-RUN R -e "install.packages(c('rmarkdown'), repos='https://cloud.r-project.org/')"
+# Set the working directory in the container
+WORKDIR /project611yjp
 
-# Set the working directory
-WORKDIR /usr/src/app
+# Copy the R Markdown file and any required files into the container
+COPY . /project611yjp
 
-# Copy the project files into the Docker image
-COPY . /usr/src/app
+# Install additional R packages if needed
+RUN R -e "install.packages(c('corrplot', 'umap', 'factoextra', 'reshape2', 'tidyr'), repos = 'http://cran.rstudio.com/')"
 
-# Default command to build the report
-CMD ["make", "report"]
+# Set the default command to render the R Markdown file
+CMD ["Rscript", "-e", "rmarkdown::render('report.Rmd')"]
