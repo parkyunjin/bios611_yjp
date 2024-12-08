@@ -4,21 +4,146 @@ author: "Yun Jin Park"
 output: pdf_document
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 60), tidy = TRUE)
+library(ggplot2)
+library(reshape2)
+library(corrplot)
+library(knitr)
+library(tidyr)
+library(umap)    
+library(cluster) 
+library(factoextra) 
+library(stats)   
+```
+
 # Introduction
 
+As one of the popular beverage across the world, coffee became a part of large culture a lot of people enjoy. This report analyzes a dataset that contains comprehensive information on the production, processing, and sensory evaluation of coffee from around the world. Among different attributes of coffee, we focused on the sensory attributes of coffee and it's relationship to total cup points and the country of origin. 
+
+```{r}
+# Load data into dataframe
+data <- read.csv("df_arabica_clean.csv")
+```
+
+# Analysis
+
+## Exploratory Data Analysis
+
+First, we explore the data this dataset has. 
+
+```{r}
+numeric_data <- data[, -c(1, 2)]  # Exclude first two columns since it is ID
+numeric_data <- numeric_data[, sapply(numeric_data, is.numeric)]  # Keep only numeric columns
+# Generate summary as a data frame
+print(summary(numeric_data))
+```
+
+```{r, warning=FALSE, message=FALSE}
+# Melt the data to long format for ggplot
+numeric_data_long <- melt(numeric_data)
+
+# Plot with facet_wrap
+ggplot(numeric_data_long, aes(x = value)) +
+  geom_histogram(fill = "blue", color = "white", alpha = 0.7, bins = 30) +
+  facet_wrap(~variable, scales = "free") +
+  labs(
+    title = "Distribution of Numeric Data in the Dataset",
+    x = "Variable Name",
+    y = "Count"
+  ) +
+  theme_minimal()
+```
+
+First, we analyze the sensory scores to identify which ones are highly correlated with each other and with the overall score and total cup points. The results indicate that most sensory evaluations exhibit strong intercorrelations, with the highest correlation observed between aftertaste and flavor, and the lowest correlation between body and aroma. Among the sensory scores, flavor and balance show the strongest correlations with the overall score, while flavor is most strongly correlated with the total cup points.
+
+```{r}
+# Subset sensory attributes and calculate correlations
+sensory_cols <- c("Aroma", "Flavor", "Aftertaste", "Acidity", "Body", "Balance",  "Overall", "Total.Cup.Points")
+sensory_data <- data[, sensory_cols]
+correlation_matrix <- cor(sensory_data, use = "complete.obs")
+
+# Visualize the correlation matrix
+corrplot(correlation_matrix, method = "color", type = "upper", tl.col = "black", tl.cex = 0.8, addCoef.col = "white", number.cex = 0.8)
+
+```
 
 
-# Methods
+Second, we analyze whether the country of origin influences different sensory scores of coffee. Here, we only consider 7 countries (Brazil, Ethiopia, Guatemala, Colombia, Honduras, Taiwan, Thailand) since these countries have more than 10 coffee samples in the data. From the results, it is evident that Ethiopian coffee has the highest acidity score. Additionally, coffee from Madagascar demonstrates high scores in both aroma and flavor.
+
+```{r}
+# Subset the data so that includes only 7 countries
+top_data <- subset(data, Country.of.Origin %in% c("Brazil", "Ethiopia", "Guatemala", "Colombia", "Honduras", "Taiwan", "Thailand"))
 
 
+# Summarize sensory attributes by county of origin
+sensory_cols2 <- c("Aroma", "Flavor", "Aftertaste", "Acidity", "Body", "Balance")
+regional_profiles <- aggregate(. ~ Country.of.Origin, data = top_data[, c("Country.of.Origin", sensory_cols2)], mean, na.rm = TRUE)
 
-# Results
+
+# Draw a heatmap of regional sensory profiles
+regional_data <- melt(regional_profiles, id.vars = "Country.of.Origin")
+ggplot(regional_data, aes(x = variable, y = Country.of.Origin, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient(low = "white", high = "blue") +
+  theme_minimal() +
+  labs(title = "National Differences in Sensory Attributes", x = "Sensory Attribute", y = "Country of Origin", fill = "Average Score")
+
+```
+
+Next, we examined whether total cup points vary by country. To assess this, we drawed a heatmap and performed an ANOVA test to determine if the mean total cup points differ significantly across countries of origin. With a p-value less than 0.05, the results suggest that the country of origin is likely a significant factor in explaining variations in total cup points.
+
+```{r}
+# Summarize total cup points by country
+regional_profiles <- aggregate(. ~ Country.of.Origin, data = top_data[, c("Country.of.Origin", "Total.Cup.Points")], mean, na.rm = TRUE)
+
+# Draw a heatmap of regional sensory profiles
+regional_data <- melt(regional_profiles, id.vars = "Country.of.Origin")
+ggplot(regional_data, aes(x = variable, y = Country.of.Origin, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient(low = "white", high = "blue") +
+  theme_minimal() +
+  labs(title = "National Differences in Total Cup Points", x = "Total Cup Points", y = "Country.of.Origin", fill = "Average Score")
 
 
+# Perform ANOVA 
+anova_result <- aov(Total.Cup.Points ~ Country.of.Origin, data = top_data)
+summary(anova_result)
+```
 
-# Discussion
+Third, we visualized the data using UMAP to explore whether clusters based on country of origin could be identified using sensory scores. While coffee samples from Guatemala appear to form a distinct cluster, samples from Taiwan show a broad distribution of sensory scores. Therefore, we conclude that it is challenging to determine the country of origin solely based on the sensory scores provided in the dataset.
 
+```{r, warning=FALSE, message=FALSE}
+sensory_data3 <- top_data[, sensory_cols]
+
+# Normalize the sensory attributes for clustering
+normalized_data <- scale(sensory_data3)
+
+# Perform dimensionality reduction
+# Choose either t-SNE or UMAP
+# Example with t-SNE
+set.seed(42) # For reproducibility
+
+# Example with UMAP
+umap_config <- umap::umap.defaults
+umap_result <- umap(normalized_data, config = umap_config)
+
+
+umap_df <- data.frame(umap_result$layout, region = top_data$Country.of.Origin)
+colnames(umap_df) <- c("Dim1", "Dim2", "Country.Of.Origin")
+
+
+# Visualize UMAP clusters
+ggplot(umap_df, aes(x = Dim1, y = Dim2, color = Country.Of.Origin)) +
+  geom_point(size = 3, alpha = 0.7) +
+  labs(title = "UMAP Visualization of Coffee Sensory Attributes",
+       x = "Dimension 1", y = "Dimension 2") +
+  theme_minimal() +
+  scale_color_brewer(palette = "Set1")
+
+```
 
 
 # Conclusion
-
+We conducted an analysis to examine the sensory attributes of coffee samples from around the world. While sensory attributes and country of origin both influence total cup points, inferring a coffee's country of origin based solely on its sensory attributes proved challenging. We hope that further analysis will shed light on the relationship between sensory attributes and country of origin.
