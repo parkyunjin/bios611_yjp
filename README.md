@@ -11,6 +11,7 @@ This repository contains the files needed to render an R Markdown report (`repor
 - **Makefile**: Automatically builds and renders the report.
 
 
+## How to use the content
 
 1. **Clone the Repository**
 ```bash
