@@ -10,6 +10,7 @@ COPY . /project611yjp
 
 # Install additional R packages if needed
 RUN R -e "install.packages(c('corrplot', 'umap', 'reshape2', 'tidyr'), repos = 'http://cran.rstudio.com/')"
+RUN apt-get update && apt-get install -y texlive-full
 
 # Set the default command to render the R Markdown file
 CMD ["Rscript", "-e", "rmarkdown::render('report.Rmd')"]
