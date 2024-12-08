@@ -13,8 +13,7 @@ library(corrplot)
 library(knitr)
 library(tidyr)
 library(umap)    
-library(cluster) 
-library(factoextra) 
+library(cluster)  
 library(stats)   
 ```
 
